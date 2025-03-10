@@ -20,6 +20,7 @@
   "dependencies": {
     "@whiskeysockets/baileys": "^6.5.0",
     "dotenv": "^16.3.1",
+    "electron-store": "^10.0.1",
     "googleapis": "^129.0.0",
     "iconv-lite": "^0.6.3",
     "openai": "^4.28.0",

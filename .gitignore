@@ -36,6 +36,10 @@ whatsapp_auth/
 **/auth_info/
 creds.json
 
+# Secure storage
+.app_data/
+credentials.data
+
 # Environment variables
 .env
 .env.local
