@@ -6,6 +6,7 @@ const whatsappConnection = require('./modules/connectWA');
 const envManager = require('./modules/envManager');
 const groupListener = require('./modules/groupListener');
 const sheetsUpdater = require('./modules/sheetsUpdater');
+const promptManager = require('./modules/promptManager');
 
 let mainWindow;
 let connectionWindow;
@@ -225,6 +226,37 @@ ipcMain.on('save-env', async (event, variables) => {
     } catch (error) {
         console.error('Error saving .env:', error);
         event.reply('env-error', error.message);
+    }
+});
+
+// Handle prompt management
+ipcMain.on('get-prompts-list', async (event) => {
+    try {
+        const promptsList = await promptManager.getPromptsList();
+        event.reply('prompts-list', promptsList);
+    } catch (error) {
+        console.error('Error fetching prompts list:', error);
+        event.reply('prompts-error', error.message);
+    }
+});
+
+ipcMain.on('get-prompt-content', async (event, promptId) => {
+    try {
+        const content = await promptManager.getPromptContent(promptId);
+        event.reply('prompt-content', { promptId, content });
+    } catch (error) {
+        console.error(`Error fetching prompt content for ${promptId}:`, error);
+        event.reply('prompts-error', error.message);
+    }
+});
+
+ipcMain.on('save-prompt-content', async (event, { promptId, content }) => {
+    try {
+        await promptManager.savePromptContent(promptId, content);
+        event.reply('prompt-saved', promptId);
+    } catch (error) {
+        console.error(`Error saving prompt content for ${promptId}:`, error);
+        event.reply('prompts-error', error.message);
     }
 });
 

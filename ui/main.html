@@ -305,6 +305,72 @@
         #stopMonitoringBtn:hover {
             background: #c82333;
         }
+
+        /* Prompt management styles */
+        .prompts-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .prompt-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .prompt-item:hover {
+            background: #e9ecef;
+        }
+
+        .prompt-item.active {
+            border-color: #128C7E;
+            background: #e1f5f2;
+        }
+
+        .prompt-name {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .prompt-description {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .prompt-editor-container {
+            margin-top: 20px;
+        }
+
+        .prompt-editor {
+            width: 100%;
+            height: 400px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            direction: rtl;
+            unicode-bidi: plaintext;
+            white-space: pre-wrap;
+        }
+
+        .prompt-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        #promptEditorStatus {
+            margin-left: auto;
+        }
     </style>
 </head>
 <body>
@@ -315,6 +381,7 @@
             <button class="tab active" data-tab="groups">קבוצות</button>
             <button class="tab" data-tab="monitoring">ניטור</button>
             <button class="tab" data-tab="settings">הגדרות</button>
+            <button class="tab" data-tab="prompts">פרומפטים</button>
         </div>
 
         <div class="tab-content active" id="groups-tab">
@@ -375,6 +442,36 @@
                     <div id="settingsStatus" class="status"></div>
                     <button type="submit" class="save-button">שמור הגדרות</button>
                 </form>
+            </div>
+        </div>
+
+        <div class="tab-content" id="prompts-tab">
+            <div class="card">
+                <h2>ניהול פרומפטים</h2>
+                <p>ערוך את הפרומפטים המשמשים לעיבוד הודעות ומענה לשאילתות</p>
+                
+                <div style="display: flex; gap: 20px; margin-top: 20px;">
+                    <div style="flex: 1; max-width: 300px;">
+                        <h3>רשימת פרומפטים</h3>
+                        <ul id="promptsList" class="prompts-list">
+                            <!-- Prompts will be loaded here -->
+                        </ul>
+                    </div>
+                    
+                    <div style="flex: 2;">
+                        <div id="promptEditorContainer" class="prompt-editor-container" style="display: none;">
+                            <h3 id="promptEditorTitle">עריכת פרומפט</h3>
+                            <textarea id="promptEditor" class="prompt-editor"></textarea>
+                            <div class="prompt-actions">
+                                <div id="promptEditorStatus" class="status"></div>
+                                <button id="savePromptBtn" class="save-button">שמור שינויים</button>
+                            </div>
+                        </div>
+                        <div id="promptNoSelection" style="padding: 30px; text-align: center; color: #6c757d;">
+                            <p>בחר פרומפט מהרשימה כדי לערוך אותו</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -631,6 +728,122 @@
 
         ipcRenderer.on('monitoring-log', (event, { type, message }) => {
             addMonitoringLogEntry(type, message);
+        });
+
+        // Prompt Management
+        const promptsList = document.getElementById('promptsList');
+        const promptEditorContainer = document.getElementById('promptEditorContainer');
+        const promptNoSelection = document.getElementById('promptNoSelection');
+        const promptEditor = document.getElementById('promptEditor');
+        const promptEditorTitle = document.getElementById('promptEditorTitle');
+        const savePromptBtn = document.getElementById('savePromptBtn');
+        const promptEditorStatus = document.getElementById('promptEditorStatus');
+
+        let currentPromptId = null;
+
+        // Load prompts list
+        function loadPromptsList() {
+            ipcRenderer.send('get-prompts-list');
+        }
+
+        // Load prompt content
+        function loadPromptContent(promptId) {
+            currentPromptId = promptId;
+            ipcRenderer.send('get-prompt-content', promptId);
+            
+            // Update UI to show editor is loading
+            promptEditorContainer.style.display = 'block';
+            promptNoSelection.style.display = 'none';
+            promptEditor.value = 'טוען...';
+            promptEditor.disabled = true;
+            
+            // Update active state in list
+            const items = promptsList.querySelectorAll('.prompt-item');
+            items.forEach(item => {
+                if (item.dataset.id === promptId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        // Handle prompts list response
+        ipcRenderer.on('prompts-list', (event, prompts) => {
+            promptsList.innerHTML = '';
+            
+            prompts.forEach(prompt => {
+                const li = document.createElement('li');
+                li.className = 'prompt-item';
+                li.dataset.id = prompt.id;
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'prompt-name';
+                nameDiv.textContent = prompt.name;
+                
+                const descDiv = document.createElement('div');
+                descDiv.className = 'prompt-description';
+                descDiv.textContent = prompt.description;
+                
+                li.appendChild(nameDiv);
+                li.appendChild(descDiv);
+                
+                li.addEventListener('click', () => {
+                    loadPromptContent(prompt.id);
+                });
+                
+                promptsList.appendChild(li);
+            });
+        });
+
+        // Handle prompt content response
+        ipcRenderer.on('prompt-content', (event, { promptId, content }) => {
+            if (promptId === currentPromptId) {
+                promptEditor.value = content;
+                promptEditor.disabled = false;
+                promptEditorTitle.textContent = `עריכת פרומפט: ${promptId.replace(/_/g, ' ')}`;
+            }
+        });
+
+        // Handle save prompt button
+        savePromptBtn.addEventListener('click', () => {
+            if (!currentPromptId) return;
+            
+            const content = promptEditor.value;
+            
+            // Show saving status
+            promptEditorStatus.className = 'status working';
+            promptEditorStatus.textContent = 'שומר שינויים...';
+            promptEditorStatus.style.display = 'block';
+            
+            ipcRenderer.send('save-prompt-content', {
+                promptId: currentPromptId,
+                content
+            });
+        });
+
+        // Handle prompt saved response
+        ipcRenderer.on('prompt-saved', (event, promptId) => {
+            if (promptId === currentPromptId) {
+                promptEditorStatus.className = 'status success';
+                promptEditorStatus.textContent = 'הפרומפט נשמר בהצלחה!';
+                
+                setTimeout(() => {
+                    promptEditorStatus.style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        // Handle prompt error response
+        ipcRenderer.on('prompts-error', (event, errorMessage) => {
+            promptEditorStatus.className = 'status error';
+            promptEditorStatus.textContent = `שגיאה: ${errorMessage}`;
+            promptEditorStatus.style.display = 'block';
+        });
+
+        // Load prompts when tab is selected
+        document.querySelector('.tab[data-tab="prompts"]').addEventListener('click', () => {
+            loadPromptsList();
         });
     </script>
 </body>

@@ -6,10 +6,10 @@ const { google } = require('googleapis');
 const whatsappConnection = require('./connectWA');
 const { standardizePrice, getNextAssetId, getRealtorInfo, validateLocation } = require('./dataUtils');
 
-// Read the system prompt from prompt_groups_listner.txt
+// Read the system prompt from prompts/groups_listener.txt
 let systemPrompt;
 try {
-    systemPrompt = fs.readFileSync(path.join(process.cwd(), 'prompt_groups_listner.txt'), 'utf8');
+    systemPrompt = fs.readFileSync(path.join(process.cwd(), 'prompts', 'groups_listener.txt'), 'utf8');
     console.log('Successfully loaded prompt file');
 } catch (error) {
     console.error('Error loading prompt file:', error);
