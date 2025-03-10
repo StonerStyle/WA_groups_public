@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>מנהל קבוצות WhatsApp</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f6f7;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #128C7E;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .button {
+            background: #128C7E;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .button:hover {
+            background: #0C6B5D;
+        }
+
+        .button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.success {
+            background: #D4EDDA;
+            color: #155724;
+            display: block;
+        }
+
+        .status.error {
+            background: #F8D7DA;
+            color: #721C24;
+            display: block;
+        }
+
+        .status.working {
+            background: #FFF3CD;
+            color: #856404;
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #128C7E;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .logs {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            text-align: right;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            direction: rtl;
+            unicode-bidi: plaintext;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 3px 6px;
+            border-radius: 3px;
+            direction: rtl;
+            unicode-bidi: plaintext;
+        }
+
+        .log-entry.info {
+            color: #0c5460;
+            background-color: #d1ecf1;
+        }
+
+        .log-entry.error {
+            color: #721c24;
+            background-color: #f8d7da;
+        }
+
+        .groups-container {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .group-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .group-item:last-child {
+            border-bottom: none;
+        }
+
+        .group-checkbox {
+            margin-left: 10px;
+            width: 18px;
+            height: 18px;
+        }
+
+        .group-name {
+            flex-grow: 1;
+            font-size: 14px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .selection-controls {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-button {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .control-button:hover {
+            background: #e9ecef;
+        }
+
+        /* Tab styles */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #128C7E;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            margin-left: 5px;
+            border-radius: 6px 6px 0 0;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: #128C7E;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Settings form styles */
+        .settings-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            border-color: #128C7E;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(18, 140, 126, 0.1);
+        }
+
+        .save-button {
+            background: #128C7E;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .save-button:hover {
+            background: #0C6B5D;
+        }
+
+        .monitoring-controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .monitoring-status {
+            margin-bottom: 20px;
+        }
+
+        .monitoring-status h2, .monitoring-logs h2 {
+            color: #128C7E;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        #monitoredGroupsList {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .monitored-group {
+            padding: 5px 10px;
+            margin: 5px 0;
+            background: #fff;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        #stopMonitoringBtn {
+            background: #dc3545;
+        }
+
+        #stopMonitoringBtn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>מנהל קבוצות WhatsApp</h1>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="groups">קבוצות</button>
+            <button class="tab" data-tab="monitoring">ניטור</button>
+            <button class="tab" data-tab="settings">הגדרות</button>
+        </div>
+
+        <div class="tab-content active" id="groups-tab">
+            <div class="card">
+                <button id="listGroupsBtn" class="button">רענן רשימת קבוצות ווצאפ</button>
+                <div id="statusMessage" class="status"></div>
+                <div class="spinner" id="spinner"></div>
+                <div id="logs" class="logs"></div>
+                
+                <div id="groupsContainer" class="groups-container">
+                    <input type="text" id="searchBox" class="search-box" placeholder="חיפוש קבוצות...">
+                    <div class="selection-controls">
+                        <button class="control-button" id="selectAllBtn">בחר הכל</button>
+                        <button class="control-button" id="deselectAllBtn">נקה בחירה</button>
+                    </div>
+                    <div id="groupsList"></div>
+                    <div class="monitoring-controls">
+                        <button id="startMonitoringBtn" class="button">התחל ניטור קבוצות נבחרות</button>
+                        <button id="stopMonitoringBtn" class="button" style="display: none;">הפסק ניטור</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="monitoring-tab">
+            <div class="card">
+                <div class="monitoring-status">
+                    <h2>סטטוס ניטור</h2>
+                    <div id="monitoringStatus" class="status">לא פעיל</div>
+                    <div id="monitoredGroupsList"></div>
+                </div>
+                <div class="monitoring-logs">
+                    <h2>יומן ניטור</h2>
+                    <div id="monitoringLogs" class="logs"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="settings-tab">
+            <div class="card">
+                <form id="settingsForm" class="settings-form">
+                    <div class="form-group">
+                        <label for="spreadsheetId">מזהה Google Sheets</label>
+                        <input type="text" id="spreadsheetId" name="spreadsheet_id" placeholder="הכנס מזהה גיליון">
+                    </div>
+                    <div class="form-group">
+                        <label for="openaiKey">מפתח OpenAI</label>
+                        <input type="password" id="openaiKey" name="openai_api_key" placeholder="הכנס מפתח API">
+                    </div>
+                    <div class="form-group">
+                        <label for="googleApiKey">מפתח Google API</label>
+                        <input type="password" id="googleApiKey" name="google_api_key" placeholder="הכנס מפתח Google API">
+                    </div>
+                    <div class="form-group">
+                        <label for="googleServiceAccount">קובץ Service Account</label>
+                        <input type="text" id="googleServiceAccount" name="google_service_account_json" placeholder="שם קובץ service-account.json">
+                    </div>
+                    <div id="settingsStatus" class="status"></div>
+                    <button type="submit" class="save-button">שמור הגדרות</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Remove the query bot card and replace with info card -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">בוט שאילתות</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <h6 class="alert-heading">שימוש בבוט שאילתות:</h6>
+                    <p>ניתן לשלוח שאילתות ישירות דרך ווצאפ למספר הבוט.</p>
+                    <p>פשוט שלח הודעה למספר שלך והבוט יענה עם תוצאות החיפוש.</p>
+                    <hr>
+                    <p class="mb-0">דוגמה לשאילתה: "אני מחפש דירת 4 חדרים בתל אביב עד 3 מיליון"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const listGroupsBtn = document.getElementById('listGroupsBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const spinner = document.getElementById('spinner');
+        const logs = document.getElementById('logs');
+        const groupsContainer = document.getElementById('groupsContainer');
+        const groupsList = document.getElementById('groupsList');
+        const searchBox = document.getElementById('searchBox');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deselectAllBtn = document.getElementById('deselectAllBtn');
+
+        let allGroups = [];
+
+        function addLogEntry(type, message) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = message;
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function filterGroups(searchTerm) {
+            const term = searchTerm.toLowerCase();
+            return allGroups.filter(group => 
+                group.subject.toLowerCase().includes(term)
+            );
+        }
+
+        function renderGroups(groups) {
+            groupsList.innerHTML = '';
+            groups.forEach(group => {
+                const item = document.createElement('div');
+                item.className = 'group-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'group-checkbox';
+                checkbox.value = group.id;
+                
+                const name = document.createElement('span');
+                name.className = 'group-name';
+                name.textContent = group.subject;
+                
+                item.appendChild(checkbox);
+                item.appendChild(name);
+                groupsList.appendChild(item);
+            });
+        }
+
+        searchBox.addEventListener('input', (e) => {
+            const filtered = filterGroups(e.target.value);
+            renderGroups(filtered);
+        });
+
+        selectAllBtn.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.group-checkbox');
+            checkboxes.forEach(cb => cb.checked = true);
+        });
+
+        deselectAllBtn.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.group-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+        });
+
+        listGroupsBtn.addEventListener('click', () => {
+            listGroupsBtn.disabled = true;
+            spinner.style.display = 'block';
+            statusMessage.className = 'status working';
+            statusMessage.textContent = 'מסנכרן קבוצות...';
+            groupsContainer.style.display = 'none';
+            ipcRenderer.send('list-groups');
+        });
+
+        ipcRenderer.on('groups-list', (event, groups) => {
+            allGroups = groups;
+            renderGroups(groups);
+            groupsContainer.style.display = 'block';
+        });
+
+        ipcRenderer.on('groups-updated', () => {
+            spinner.style.display = 'none';
+            statusMessage.className = 'status success';
+            statusMessage.textContent = 'הקבוצות סונכרנו בהצלחה!';
+            listGroupsBtn.disabled = false;
+        });
+
+        ipcRenderer.on('groups-error', (event, error) => {
+            spinner.style.display = 'none';
+            statusMessage.className = 'status error';
+            statusMessage.textContent = `שגיאה: ${error}`;
+            listGroupsBtn.disabled = false;
+            addLogEntry('error', error);
+        });
+
+        ipcRenderer.on('log-message', (event, { type, message }) => {
+            addLogEntry(type, message);
+        });
+
+        // Tab functionality
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+
+        // Settings form functionality
+        const settingsForm = document.getElementById('settingsForm');
+        const settingsStatus = document.getElementById('settingsStatus');
+        
+        // Load current settings
+        ipcRenderer.send('load-env');
+        
+        ipcRenderer.on('env-loaded', (event, envVars) => {
+            Object.entries(envVars).forEach(([key, value]) => {
+                const input = settingsForm.querySelector(`[name="${key}"]`);
+                if (input) input.value = value || '';
+            });
+        });
+
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(settingsForm);
+            const envVars = Object.fromEntries(formData);
+            
+            // Remove empty values
+            Object.keys(envVars).forEach(key => {
+                if (!envVars[key]) delete envVars[key];
+            });
+            
+            settingsStatus.className = 'status working';
+            settingsStatus.textContent = 'שומר הגדרות...';
+            settingsStatus.style.display = 'block';
+            
+            ipcRenderer.send('save-env', envVars);
+        });
+
+        ipcRenderer.on('env-saved', () => {
+            settingsStatus.className = 'status success';
+            settingsStatus.textContent = 'ההגדרות נשמרו בהצלחה!';
+            
+            setTimeout(() => {
+                settingsStatus.style.display = 'none';
+            }, 3000);
+        });
+
+        ipcRenderer.on('env-error', (error) => {
+            settingsStatus.className = 'status error';
+            settingsStatus.textContent = `שגיאה: ${error}`;
+        });
+
+        // Add monitoring functionality
+        const startMonitoringBtn = document.getElementById('startMonitoringBtn');
+        const stopMonitoringBtn = document.getElementById('stopMonitoringBtn');
+        const monitoringStatus = document.getElementById('monitoringStatus');
+        const monitoredGroupsList = document.getElementById('monitoredGroupsList');
+        const monitoringLogs = document.getElementById('monitoringLogs');
+
+        let selectedGroups = [];
+
+        function addMonitoringLogEntry(type, message) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = message;
+            monitoringLogs.appendChild(entry);
+            monitoringLogs.scrollTop = monitoringLogs.scrollHeight;
+        }
+
+        function updateMonitoredGroups(groups) {
+            monitoredGroupsList.innerHTML = '';
+            groups.forEach(group => {
+                const div = document.createElement('div');
+                div.className = 'monitored-group';
+                div.textContent = group.subject;
+                monitoredGroupsList.appendChild(div);
+            });
+        }
+
+        function updateMonitoringStatus(isActive) {
+            startMonitoringBtn.style.display = isActive ? 'none' : 'block';
+            stopMonitoringBtn.style.display = isActive ? 'block' : 'none';
+            monitoringStatus.className = `status ${isActive ? 'success' : ''}`;
+            monitoringStatus.textContent = isActive ? 'ניטור פעיל' : 'לא פעיל';
+        }
+
+        startMonitoringBtn.addEventListener('click', () => {
+            selectedGroups = Array.from(document.querySelectorAll('.group-checkbox:checked')).map(cb => ({
+                id: cb.value,
+                subject: cb.parentElement.querySelector('.group-name').textContent
+            }));
+
+            if (selectedGroups.length === 0) {
+                statusMessage.className = 'status error';
+                statusMessage.textContent = 'נא לבחור לפחות קבוצה אחת לניטור';
+                statusMessage.style.display = 'block';
+                return;
+            }
+
+            ipcRenderer.send('start-monitoring', selectedGroups);
+            updateMonitoredGroups(selectedGroups);
+        });
+
+        stopMonitoringBtn.addEventListener('click', () => {
+            ipcRenderer.send('stop-monitoring');
+        });
+
+        // Handle monitoring status events
+        ipcRenderer.on('monitoring-started', () => {
+            updateMonitoringStatus(true);
+            ipcRenderer.send('start-query-bot');
+        });
+
+        ipcRenderer.on('monitoring-stopped', () => {
+            updateMonitoringStatus(false);
+            monitoredGroupsList.innerHTML = '';
+            selectedGroups = [];
+        });
+
+        ipcRenderer.on('monitoring-error', (event, error) => {
+            statusMessage.className = 'status error';
+            statusMessage.textContent = `שגיאה: ${error}`;
+            statusMessage.style.display = 'block';
+            updateMonitoringStatus(false);
+        });
+
+        ipcRenderer.on('monitoring-log', (event, { type, message }) => {
+            addMonitoringLogEntry(type, message);
+        });
+    </script>
+</body>
+</html> 

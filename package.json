@@ -1,0 +1,30 @@
+{
+  "name": "wa-group-scrape",
+  "version": "2.0.0",
+  "description": "WhatsApp Group Scraper with Google Sheets integration",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.5.0",
+    "dotenv": "^16.3.1",
+    "googleapis": "^129.0.0",
+    "iconv-lite": "^0.6.3",
+    "openai": "^4.28.0",
+    "pino-pretty": "^13.0.0",
+    "qrcode-terminal": "^0.12.0",
+    "windows-1255": "^3.0.4"
+  }
+}

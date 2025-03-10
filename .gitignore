@@ -1,0 +1,143 @@
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+.virtualenv/
+virtualenv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node.js dependencies
+node_modules/
+jspm_packages/
+package-lock.json
+
+# Build output
+dist/
+build/
+out/
+*.asar
+*.app
+*.dmg
+*.deb
+*.rpm
+*.pkg
+*.snap
+WhatsApp Group Scraper.exe
+
+# Authentication information (sensitive)
+auth_info/
+modules/auth_info/
+whatsapp_auth/
+**/auth_info/
+creds.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+.env example
+
+# Generated files
+*.exe
+*.dll
+*.so
+*.dylib
+*.pak
+*.dat
+*.pyc
+*.bin
+*.blob
+*.obj
+*.db
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+log/
+
+# OS specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-*
+.project
+.classpath
+.settings/
+
+# Electron distribution files
+*.asar
+electron-builder.yml
+
+# Cached data
+__pycache__/
+.cache/
+.npm/
+.yarn/
+
+# Windows specific
+*.stackdump
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+.temp/
+.tmp/
+
+# Service accounts and credentials
+service-account.json
+credentials.json
+token.json
+*-credentials.json
+google-credentials.json
+
+# Binary and media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.ico
+*.svg
+*.mp3
+*.mp4
+*.wav
+*.flac
+*.ogg
+*.woff
+*.woff2
+*.ttf
+*.eot
+*.webp
+*.pdf
+*.zip
+*.gz
+*.tar
+*.rar
+*.7z

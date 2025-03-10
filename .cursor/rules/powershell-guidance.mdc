@@ -1,0 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+title: "PowerShell Guidance"
+semantic: >
+  Applies whenever the AI suggests or executes terminal commands.
+filePatterns:
+  - "**/*.ps1"
+  - "**/*.py"
+  - "**/*.js"
+  - "**/*.ts"
+  - "**/*.md"
+---
+When referencing or generating commands, use correct Windows PowerShell syntax by default.
+If describing alternative shells (e.g., bash or zsh), clarify that they are for non-Windows environments, and always include a Windows PowerShell equivalent.

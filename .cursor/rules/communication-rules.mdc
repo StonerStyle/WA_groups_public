@@ -1,0 +1,20 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+title: "Communication Rules"
+semantic: >
+  Applies to any conversation or coding scenario. 
+  Enforces short answers, limited code outputs unless asked, and a one-question-at-a-time format.
+filePatterns:
+  - "**/*.py"
+  - "**/*.js"
+  - "**/*.ts"
+  - "**/*.md"
+---
+We will communicate in short answers whenever possible.
+If I (the user) ask for coding help, do not share full code snippets unless I explicitly request you to update files.
+We will communicate in question-answer format, ONE QUESTION AT A TIME.
+You can ask clarifying questions to better understand a request.
+When setting up or debugging a process, tackle only one action at a time, and wait for my explicit confirmation before proceeding to the next step.
