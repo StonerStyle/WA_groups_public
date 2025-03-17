@@ -1,0 +1,71 @@
+{
+  "name": "wa-group-scrape-clean",
+  "version": "3.0.0",
+  "description": "WhatsApp Group Scraper for real estate data - Clean version",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "dev-ui": "echo 'Starting in development mode with UI focus' && electron . --dev",
+    "build": "electron-builder",
+    "publish": "electron-builder --publish always",
+    "release": "electron-builder --publish always",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StonerStyle/WA_groups_public.git"
+  },
+  "keywords": [
+    "whatsapp",
+    "real-estate",
+    "ai",
+    "google-sheets",
+    "electron"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.0.1",
+    "dotenv": "^16.0.3",
+    "electron-log": "^4.4.8",
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.1",
+    "googleapis": "^118.0.0",
+    "openai": "^4.0.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.6.4",
+    "electron-reloader": "^1.2.3"
+  },
+  "build": {
+    "appId": "com.wa-group-scrape-clean",
+    "productName": "WhatsApp Group Scraper",
+    "directories": {
+      "output": "dist"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "StonerStyle",
+        "repo": "WA_groups_public"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

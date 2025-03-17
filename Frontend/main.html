@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>מנהל קבוצות WhatsApp</title>
+    <style>
+        :root {
+            --primary: #128C7E;
+            --primary-dark: #0d6b63;
+            --light-bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --error: #F44336;
+            --neutral: #aaaaaa;
+            --border-radius: 12px;
+            --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--light-bg);
+            direction: rtl;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-rows: auto 1fr;
+            grid-template-areas: 
+                "header header"
+                "sidebar content";
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .app-header {
+            grid-area: header;
+            background-color: var(--primary);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+        }
+
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-title img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .app-title h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .app-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Header buttons */
+        .app-actions .btn {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .app-actions .btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Sidebar */
+        .app-sidebar {
+            grid-area: sidebar;
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+            padding: 24px 0;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+            padding: 0 16px;
+        }
+
+        .nav-section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            padding: 0 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-item:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+
+        .nav-item.active {
+            background-color: rgba(18, 140, 126, 0.1);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .nav-item-icon {
+            margin-left: 12px;
+            font-size: 18px;
+            opacity: 0.8;
+        }
+
+        /* Content */
+        .app-content {
+            grid-area: content;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .content-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .connection-status {
+            display: none; /* Hide the dot indicators since we have the alert boxes */
+        }
+
+        /* Connection Alerts */
+        #connection-info {
+            width: 100%;
+        }
+
+        #connection-info .alert {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+        }
+
+        #connection-info .btn {
+            margin-right: 8px;
+            padding: 6px 12px;
+            white-space: nowrap;
+        }
+
+        /* Keep alert messages visible */
+        #whatsapp-connection-info,
+        #google-connection-info,
+        #openai-connection-info {
+            margin-bottom: 8px;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            margin-bottom: 24px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Groups List */
+        .groups-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .group-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .group-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .group-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-left: 12px;
+        }
+
+        .group-info {
+            flex: 1;
+        }
+
+        .group-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .group-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .group-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(18, 140, 126, 0.2);
+        }
+
+        .input-group {
+            display: flex;
+        }
+
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .input-group-append {
+            display: flex;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(18, 140, 126, 0.1);
+        }
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #d0d0d0;
+        }
+
+        .btn-icon {
+            margin-left: 8px;
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+        }
+        
+        .wa-icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 width=%2224%22 height=%2224%22><path d=%22M12 2C6.5 2 2 6.5 2 12c0 2 .6 3.9 1.7 5.5L2.5 22l4.6-1.2c1.6 1 3.4 1.5 5.4 1.5 5.5 0 10-4.5 10-10S17.5 2 12 2z%22 fill=%22white%22/></svg>');
+            vertical-align: middle;
+        }
+        
+        .connection-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .connection-actions .btn {
+            width: 100%;
+            justify-content: flex-start;
+            padding: 12px 16px;
+        }
+        
+        .content-header .card {
+            margin-bottom: 24px;
+        }
+
+        /* Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            right: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(-24px);
+        }
+
+        /* Logs */
+        .logs-container {
+            background-color: #1e1e1e;
+            color: #ddd;
+            font-family: 'Courier New', monospace;
+            padding: 16px;
+            border-radius: 8px;
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .log-time {
+            color: #88c0d0;
+            margin-left: 8px;
+        }
+
+        .log-info {
+            color: #8fbcbb;
+        }
+
+        .log-warn {
+            color: #ebcb8b;
+        }
+
+        .log-error {
+            color: #bf616a;
+        }
+
+        /* Helpers */
+        .mt-4 {
+            margin-top: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Alert Styling */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #2e7d32;
+        }
+
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            color: #f57c00;
+        }
+
+        .alert-error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- App Header -->
+        <header class="app-header">
+            <div class="app-title">
+                <img src="../resources/wa-logo.png" alt="WhatsApp Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 width=%2232%22 height=%2232%22><path d=%22M12 2C6.5 2 2 6.5 2 12c0 2 .6 3.9 1.7 5.5L2.5 22l4.6-1.2c1.6 1 3.4 1.5 5.4 1.5 5.5 0 10-4.5 10-10S17.5 2 12 2z%22 fill=%22white%22/></svg>'">
+                <h1>מנהל קבוצות WhatsApp - איתור מידע נדל"ן</h1>
+            </div>
+            <div class="app-actions">
+                <button id="check-updates" class="btn btn-outline">
+                    <span class="version-label">גרסה 3.0.0</span>
+                    <span class="check-updates-text">בדוק עדכונים</span>
+                </button>
+                <button id="test-connections" class="btn btn-outline">בדוק חיבורים</button>
+            </div>
+        </header>
+
+        <!-- App Sidebar -->
+        <aside class="app-sidebar">
+            <div class="nav-section">
+                <h4 class="nav-section-title">ניהול</h4>
+                <div class="nav-item active" data-page="groups">
+                    <span class="nav-item-icon">📱</span>
+                    <span>קבוצות WhatsApp</span>
+                </div>
+                <div class="nav-item" data-page="data">
+                    <span class="nav-item-icon">📊</span>
+                    <span>נתונים ומידע</span>
+                </div>
+                <div class="nav-item" data-page="query">
+                    <span class="nav-item-icon">🔍</span>
+                    <span>שאילתות</span>
+                </div>
+            </div>
+            <div class="nav-section">
+                <h4 class="nav-section-title">הגדרות</h4>
+                <div class="nav-item" data-page="settings">
+                    <span class="nav-item-icon">⚙️</span>
+                    <span>הגדרות כלליות</span>
+                </div>
+                <div class="nav-item" data-page="logs">
+                    <span class="nav-item-icon">📝</span>
+                    <span>יומן פעילות</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- App Content -->
+        <main class="app-content">
+            <!-- Connection Status -->
+            <div class="connection-status">
+                <div class="connection-item">
+                    <div class="status-indicator">
+                        <div class="status-dot status-unknown" id="whatsapp-status"></div>
+                        <span>WhatsApp</span>
+                    </div>
+                </div>
+                <div class="connection-item">
+                    <div class="status-indicator">
+                        <div class="status-dot status-unknown" id="openai-status"></div>
+                        <span>OpenAI</span>
+                    </div>
+                </div>
+                <div class="connection-item">
+                    <div class="status-indicator">
+                        <div class="status-dot status-unknown" id="sheets-status"></div>
+                        <span>Google Sheets</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Groups Page -->
+            <div class="content-page active" id="groups-page">
+                <div class="content-header">
+                    <h2 class="content-title">קבוצות WhatsApp</h2>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">חיבורים</h3>
+                        </div>
+                        
+                        <div class="connection-actions">
+                            <button id="connect-whatsapp" class="btn btn-primary btn-lg">
+                                <i class="btn-icon wa-icon"></i>
+                                התחבר ל-WhatsApp
+                            </button>
+                            
+                            <button id="connect-google" class="btn btn-primary btn-lg">
+                                <img src="../resources/google-icon.svg" alt="Google" class="btn-icon" onerror="this.style.display='none'">
+                                התחבר ל-Google
+                            </button>
+                            
+                            <button id="connect-openai" class="btn btn-primary btn-lg">
+                                <img src="../resources/openai-icon.svg" alt="OpenAI" class="btn-icon" onerror="this.style.display='none'">
+                                התחבר ל-OpenAI
+                            </button>
+                        </div>
+                        
+                        <!-- Connection status info -->
+                        <div id="connection-info" class="mt-4">
+                            <div id="whatsapp-connection-info" class="hidden">
+                                <div class="alert alert-success">
+                                    <span><strong>WhatsApp</strong> מחובר</span>
+                                    <button type="button" id="whatsapp-disconnect" class="btn btn-sm btn-outline">התנתק</button>
+                                </div>
+                            </div>
+                            <div id="google-connection-info" class="hidden">
+                                <div class="alert alert-success">
+                                    <span><strong>Google</strong> מחובר: <span id="google-email-display"></span></span>
+                                    <button type="button" id="google-disconnect" class="btn btn-sm btn-outline">התנתק</button>
+                                </div>
+                            </div>
+                            <div id="openai-connection-info" class="hidden">
+                                <div class="alert alert-success">
+                                    <span><strong>OpenAI</strong> מחובר</span>
+                                    <button type="button" id="openai-disconnect" class="btn btn-sm btn-outline">התנתק</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">קבוצות במעקב</h3>
+                    </div>
+                    <p>בחר קבוצות WhatsApp שברצונך לעקוב אחריהן לצורך איתור מידע נדל"ן.</p>
+                    
+                    <div class="groups-list">
+                        <!-- Sample Group Items (will be dynamically generated) -->
+                        <div class="group-card">
+                            <div class="group-header">
+                                <div class="group-avatar">נ</div>
+                                <div class="group-info">
+                                    <div class="group-name">נדל"ן חיפה והסביבה</div>
+                                    <div class="group-meta">37 חברים</div>
+                                </div>
+                            </div>
+                            <div class="group-actions">
+                                <span>במעקב</span>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="group-card">
+                            <div class="group-header">
+                                <div class="group-avatar">נ</div>
+                                <div class="group-info">
+                                    <div class="group-name">נדל"ן תל אביב - דירות למכירה</div>
+                                    <div class="group-meta">122 חברים</div>
+                                </div>
+                            </div>
+                            <div class="group-actions">
+                                <span>במעקב</span>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="group-card">
+                            <div class="group-header">
+                                <div class="group-avatar">נ</div>
+                                <div class="group-info">
+                                    <div class="group-name">נדל"ן ירושלים ערוץ 1</div>
+                                    <div class="group-meta">56 חברים</div>
+                                </div>
+                            </div>
+                            <div class="group-actions">
+                                <span>במעקב</span>
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Page -->
+            <div class="content-page hidden" id="data-page">
+                <div class="content-header">
+                    <h2 class="content-title">נתונים ומידע</h2>
+                    <button class="btn btn-primary">רענן נתונים</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">סיכום נתונים</h3>
+                    </div>
+                    <p>תצוגה מסכמת של נתוני נדל"ן שנאספו מקבוצות WhatsApp.</p>
+                    
+                    <!-- Data Dashboard will go here -->
+                    <div class="mt-4">
+                        <p>נתונים יוצגו כאן לאחר התחברות וניטור קבוצות.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Query Page -->
+            <div class="content-page hidden" id="query-page">
+                <div class="content-header">
+                    <h2 class="content-title">שאילתות חיפוש</h2>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">חיפוש נכסים</h3>
+                    </div>
+                    <p>הגדר קריטריונים לחיפוש נכסים בנתונים שנאספו.</p>
+                    
+                    <div class="mt-4">
+                        <!-- Query Form -->
+                        <div class="form-group">
+                            <label class="form-label">חפש:</label>
+                            <input type="text" class="form-control" placeholder="לדוגמה: דירות 4 חדרים בחיפה עד 2 מיליון...">
+                        </div>
+                        <button class="btn btn-primary">חפש</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div class="content-page hidden" id="settings-page">
+                <div class="content-header">
+                    <h2 class="content-title">הגדרות</h2>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">התחברות ואימות</h3>
+                    </div>
+                    
+                    <form id="settings-form">
+                        <div class="form-group">
+                            <label class="form-label" for="openai_api_key">מפתח API של OpenAI:</label>
+                            <div class="input-group">
+                                <input type="password" id="openai_api_key" name="openai_api_key" class="form-control">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-secondary toggle-password" data-for="openai_api_key">הצג</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="spreadsheet_id">מזהה גיליון Google:</label>
+                            <input type="text" id="spreadsheet_id" name="spreadsheet_id" class="form-control">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">שמור הגדרות</button>
+                    </form>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title">הגדרות מתקדמות</h3>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">תדירות סריקה:</label>
+                        <select class="form-control">
+                            <option>בזמן אמת (מיידי)</option>
+                            <option>כל 5 דקות</option>
+                            <option>כל 15 דקות</option>
+                            <option>כל שעה</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">הפעל התראות:</label>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Page -->
+            <div class="content-page hidden" id="logs-page">
+                <div class="content-header">
+                    <h2 class="content-title">יומן פעילות</h2>
+                    <button class="btn btn-secondary">נקה יומן</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">יומן מערכת</h3>
+                    </div>
+                    
+                    <div class="logs-container">
+                        <div class="log-entry">
+                            <span class="log-time">[15:32:44]</span>
+                            <span class="log-info">יישום הופעל</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[15:32:45]</span>
+                            <span class="log-info">טוען הגדרות...</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[15:32:47]</span>
+                            <span class="log-info">מנסה להתחבר לשירותים...</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[15:32:50]</span>
+                            <span class="log-warn">לא ניתן להתחבר ל-WhatsApp. נדרשת סריקת קוד QR.</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[15:33:01]</span>
+                            <span class="log-info">התחברות ל-Google Sheets הצליחה</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[15:33:02]</span>
+                            <span class="log-info">התחברות ל-OpenAI הצליחה</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html> 
