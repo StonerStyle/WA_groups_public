@@ -1,7 +1,7 @@
 {
   "name": "wa-group-scrape-clean",
-  "version": "3.0.2",
-  "description": "WhatsApp Group Scraper for real estate data - Clean version 3.0.2",
+  "version": "3.0.3",
+  "description": "WhatsApp Group Scraper for real estate data - Clean version 3.0.3",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {

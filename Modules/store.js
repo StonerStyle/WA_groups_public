@@ -1,55 +1,73 @@
-const Store = require('electron-store');
 const log = require('electron-log');
-
-// Create a schema for the store
-const schema = {
-  openai_api_key: {
-    type: 'string'
-  },
-  spreadsheet_id: {
-    type: 'string'
-  },
-  google_auth: {
-    type: 'object',
-    properties: {
-      email: { type: 'string' },
-      token: { type: 'string' }
-    }
-  },
-  whatsapp_auth: {
-    type: 'object'
-  }
-};
-
-// Create the store instance with encryption
-const store = new Store({
-  schema,
-  encryptionKey: 'wa-scraper-encryption-key',  // In a real app, use a more secure key
-  clearInvalidConfig: true,
-  name: 'wa-group-scraper-settings',
-  defaults: {
-    openai: {
-      apiKey: null,
-      isConnected: false
-    },
-    google: {
-      credentials: null,
-      isConnected: false
-    },
-    whatsapp: {
-      isConnected: false,
-      lastConnection: null
-    }
-  }
-});
 
 /**
  * Store module for handling app settings and credentials
  */
 class StoreManager {
   constructor() {
-    this.store = store;
-    log.info('Store initialized');
+    this.store = null;
+    this.isInitialized = false;
+  }
+
+  /**
+   * Initialize the store - must be called before using any other methods
+   */
+  async initialize() {
+    if (this.isInitialized) return;
+    
+    try {
+      // Dynamically import electron-store (ES Module)
+      const electronStore = await import('electron-store');
+      const Store = electronStore.default;
+      
+      // Create a schema for the store
+      const schema = {
+        openai_api_key: {
+          type: 'string'
+        },
+        spreadsheet_id: {
+          type: 'string'
+        },
+        google_auth: {
+          type: 'object',
+          properties: {
+            email: { type: 'string' },
+            token: { type: 'string' }
+          }
+        },
+        whatsapp_auth: {
+          type: 'object'
+        }
+      };
+      
+      // Create the store instance with encryption
+      this.store = new Store({
+        schema,
+        encryptionKey: 'wa-scraper-encryption-key',  // In a real app, use a more secure key
+        clearInvalidConfig: true,
+        name: 'wa-group-scraper-settings',
+        defaults: {
+          openai: {
+            apiKey: null,
+            isConnected: false
+          },
+          google: {
+            credentials: null,
+            isConnected: false
+          },
+          whatsapp: {
+            isConnected: false,
+            lastConnection: null
+          }
+        }
+      });
+      
+      this.isInitialized = true;
+      log.info('Store initialized');
+    } catch (error) {
+      log.error('Error initializing store:', error);
+      throw error;
+    }
   }
 
   /**
@@ -57,6 +75,11 @@ class StoreManager {
    * @param {Object} settings - The settings to save
    */
   saveSettings(settings) {
+    if (!this.isInitialized) {
+      log.error('Store not initialized');
+      return false;
+    }
+    
     try {
       if (settings.openai_api_key) {
         this.store.set('openai_api_key', settings.openai_api_key);
@@ -79,6 +102,16 @@ class StoreManager {
    * @returns {Object} The loaded settings
    */
   loadSettings() {
+    if (!this.isInitialized) {
+      log.error('Store not initialized');
+      return {
+        openai_api_key: '',
+        spreadsheet_id: '',
+        google_auth: null,
+        whatsapp_auth: null
+      };
+    }
+    
     try {
       return {
         openai_api_key: this.store.get('openai_api_key') || '',
@@ -102,6 +135,11 @@ class StoreManager {
    * @param {Object} authData - The Google auth data
    */
   saveGoogleAuth(authData) {
+    if (!this.isInitialized) {
+      log.error('Store not initialized');
+      return false;
+    }
+    
     try {
       this.store.set('google_auth', authData);
       log.info('Google auth data saved');
@@ -117,6 +155,11 @@ class StoreManager {
    * @param {Object} authData - The WhatsApp auth data
    */
   saveWhatsAppAuth(authData) {
+    if (!this.isInitialized) {
+      log.error('Store not initialized');
+      return false;
+    }
+    
     try {
       this.store.set('whatsapp_auth', authData);
       log.info('WhatsApp auth data saved');
@@ -131,6 +174,11 @@ class StoreManager {
    * Clear Google authentication data
    */
   clearGoogleAuth() {
+    if (!this.isInitialized) {
+      log.error('Store not initialized');
+      return false;
+    }
+    
     try {
       this.store.delete('google_auth');
       log.info('Google auth data cleared');
@@ -145,6 +193,11 @@ class StoreManager {
    * Clear WhatsApp authentication data
    */
   clearWhatsAppAuth() {
+    if (!this.isInitialized) {
+      log.error('Store not initialized');
+      return false;
+    }
+    
     try {
       this.store.delete('whatsapp_auth');
       log.info('WhatsApp auth data cleared');
@@ -160,6 +213,11 @@ class StoreManager {
    * @param {string} apiKey - The OpenAI API key
    */
   saveOpenAIKey(apiKey) {
+    if (!this.isInitialized) {
+      log.error('Store not initialized');
+      return false;
+    }
+    
     try {
       this.store.set('openai_api_key', apiKey);
       log.info('OpenAI API key saved');
@@ -174,6 +232,11 @@ class StoreManager {
    * Clear OpenAI API key
    */
   clearOpenAIKey() {
+    if (!this.isInitialized) {
+      log.error('Store not initialized');
+      return false;
+    }
+    
     try {
       this.store.delete('openai_api_key');
       log.info('OpenAI API key cleared');
@@ -185,4 +248,8 @@ class StoreManager {
   }
 }
 
-module.exports = new StoreManager(); 
+// Create a singleton instance
+const storeManager = new StoreManager();
+
+// Export the singleton
+module.exports = storeManager; 

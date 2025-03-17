@@ -4,6 +4,15 @@ This document tracks all releases of the WhatsApp Group Scraper application, inc
 
 ## Version History
 
+### Version 3.0.3 - 2024-05-15
+
+**Bug Fixes**
+
+- Fixed ES Module compatibility issue with electron-store
+- Improved store initialization with proper async handling
+- Enhanced error handling for module loading
+- Ensured proper state initialization before app startup
+
 ### Version 3.0.0 - 2024-03-17
 
 **Initial Clean Release**

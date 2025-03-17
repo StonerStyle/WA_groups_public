@@ -100,15 +100,24 @@ function createConnectionWindow() {
 }
 
 // Create windows when Electron app is ready
-app.whenReady().then(() => {
-  createMainWindow();
-  
-  // On macOS, re-create window when dock icon is clicked
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
-    }
-  });
+app.whenReady().then(async () => {
+  try {
+    // Initialize the store manager
+    await StoreManager.initialize();
+    
+    // Now create the main window
+    createMainWindow();
+    
+    // On macOS, re-create window when dock icon is clicked
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createMainWindow();
+      }
+    });
+  } catch (error) {
+    console.error('Failed to initialize StoreManager:', error);
+    app.quit();
+  }
 });
 
 // Quit the app when all windows are closed (except on macOS)
