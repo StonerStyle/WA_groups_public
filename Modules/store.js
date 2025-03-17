@@ -25,7 +25,22 @@ const schema = {
 const store = new Store({
   schema,
   encryptionKey: 'wa-scraper-encryption-key',  // In a real app, use a more secure key
-  clearInvalidConfig: true
+  clearInvalidConfig: true,
+  name: 'wa-group-scraper-settings',
+  defaults: {
+    openai: {
+      apiKey: null,
+      isConnected: false
+    },
+    google: {
+      credentials: null,
+      isConnected: false
+    },
+    whatsapp: {
+      isConnected: false,
+      lastConnection: null
+    }
+  }
 });
 
 /**
